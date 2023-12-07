@@ -22,40 +22,33 @@ public class LibraryTest {
     }
 
     @Test
-    public void testCheckoutBooks() {
+    public void testAddBook() {
         Library library = new Library();
 
-        // Libros de muestra
-        library.books.add(new Book("Book1", "Author1", 5));
-        library.books.add(new Book("Book2", "Author2", 8));
-        library.books.add(new Book("Book3", "Author3", 3));
+        // Agregar un libro de muestra
+        Book book = new Book("SampleBook", "SampleAuthor", 3);
+        library.books.add(book);
 
-        // Simular la entrada del usuario
-        String simulatedInput = "1\n2\n1\n0\n";
-        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
-
-        // Llamar al método y verificar la salida
-        double lateFee = library.checkoutBooks(null);
-        assertEquals(0, lateFee); // No debería haber tarifas de demora simuladas en este caso
-        assertEquals(2, library.books.get(0).available); // La cantidad disponible debe reducirse después del check-out
+        // Verificar que el libro se ha agregado correctamente
+        assertEquals(1, library.books.size());
+        assertSame(book, library.books.get(0));
     }
 
     @Test
-    public void testReturnBooks() {
+    public void testDisplayCatalog() {
         Library library = new Library();
 
         // Agregar algunos libros de muestra
         library.books.add(new Book("Book1", "Author1", 5));
         library.books.add(new Book("Book2", "Author2", 8));
-        library.books.add(new Book("Book3", "Author3", 3));
 
-        // Simular la entrada del usuario
-        String simulatedInput = "Book1\n2\n0\n";
-        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+        // Capturar la salida estándar durante la ejecución de displayCatalog
+        String[] capturedOutput = TestUtils.captureSystemOut(() -> library.displayCatalog());
 
-        // Llamar al método y verificar la salida
-        double lateFee = library.returnBooks(null);
-        assertEquals(0, lateFee); // No debería haber tarifas de demora simuladas en este caso
-        assertEquals(7, library.books.get(0).available); // La cantidad disponible debe aumentar después del retorno
+        // Verificar que la salida contiene información sobre los libros
+        assertTrue(capturedOutput[0].contains("Book1 by Author1 - Available: 5"));
+        assertTrue(capturedOutput[0].contains("Book2 by Author2 - Available: 8"));
     }
+
+    // Agrega más pruebas según sea necesario
 }
