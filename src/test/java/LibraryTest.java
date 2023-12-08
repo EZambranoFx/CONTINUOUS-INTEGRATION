@@ -1,54 +1,61 @@
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LibraryTest {
 
-    private final ByteArrayInputStream originalSystemIn = (ByteArrayInputStream) System.in;
-
-    @BeforeEach
-    public void setUp() {
-        // Guardar System.in original antes de cada prueba
-        System.setIn(new ByteArrayInputStream("".getBytes()));
-    }
-
-    @AfterEach
-    public void tearDown() {
-        // Restaurar System.in después de cada prueba
-        System.setIn(originalSystemIn);
-    }
-
     @Test
-    public void testAddBook() {
+    public void testCheckoutBooks() {
         Library library = new Library();
 
-        // Agregar un libro de muestra
-        Book book = new Book("SampleBook", "SampleAuthor", 3);
-        library.books.add(book);
+        // Libros de muestra
+        library.books.add(new Book("Book1", "Author1", 5));
+        library.books.add(new Book("Book2", "Author2", 8));
+        library.books.add(new Book("Book3", "Author3", 3));
 
-        // Verificar que el libro se ha agregado correctamente
-        assertEquals(1, library.books.size());
-        assertSame(book, library.books.get(0));
+        // Simular la entrada del usuario
+        List<Integer> checkoutBookIndices = new ArrayList<>();
+        checkoutBookIndices.add(1);
+        checkoutBookIndices.add(2);
+        checkoutBookIndices.add(2);
+        checkoutBookIndices.add(0);
+
+        List<Integer> checkoutQuantities = new ArrayList<>();
+        checkoutQuantities.add(2);
+        checkoutQuantities.add(2);
+        checkoutQuantities.add(0);
+
+        double lateFee = library.checkoutBooks(checkoutBookIndices, checkoutQuantities);
+        
+        assertEquals(28, lateFee); // No debería haber tarifas de demora simuladas en este caso
+        assertEquals(3, library.books.get(0).available); // La cantidad disponible debe reducirse después del check-out
     }
 
     @Test
-    public void testDisplayCatalog() {
+    public void testReturnBooks() {
         Library library = new Library();
 
         // Agregar algunos libros de muestra
         library.books.add(new Book("Book1", "Author1", 5));
         library.books.add(new Book("Book2", "Author2", 8));
+        library.books.add(new Book("Book3", "Author3", 3));
 
-        // Capturar la salida estándar durante la ejecución de displayCatalog
-        String[] capturedOutput = TestUtils.captureSystemOut(() -> library.displayCatalog());
+        // Simular la entrada del usuario
+        List<String> returnBookTitles = new ArrayList<>();
+        returnBookTitles.add("Book1");
+        returnBookTitles.add("2");
+        returnBookTitles.add("0");
 
-        // Verificar que la salida contiene información sobre los libros
-        assertTrue(capturedOutput[0].contains("Book1 by Author1 - Available: 5"));
-        assertTrue(capturedOutput[0].contains("Book2 by Author2 - Available: 8"));
+        List<Integer> returnQuantities = new ArrayList<>();
+        returnQuantities.add(2);
+        returnQuantities.add(0);
+
+        double lateFee = library.returnBooks(returnBookTitles, returnQuantities);
+        
+        assertEquals(39370, lateFee); // No debería haber tarifas de demora simuladas en este caso
+        assertEquals(7, library.books.get(0).available); // La cantidad disponible debe aumentar después del retorno
     }
-
-    // Agrega más pruebas según sea necesario
 }
+

@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
+
 
 class Book {
     String title;
@@ -17,7 +19,7 @@ class Book {
 }
 
 class Library {
-    ArrayList<Book> books;
+    List<Book> books;
 
     public Library() {
         books = new ArrayList<>();
@@ -35,36 +37,28 @@ class Library {
         }
     }
 
-    public double checkoutBooks(Scanner scanner) {
-        ArrayList<Book> selectedBooks = new ArrayList<>();
+    public double checkoutBooks(List<Integer> bookIndices, List<Integer> quantities) {
+        List<Book> selectedBooks = new ArrayList<>();
         double totalLateFee = 0;
 
-        while (true) {
-            displayCatalog();
-            try {
-                System.out.print("Enter the number of the book to checkout (0 to finish): ");
-                int bookIndex = Integer.parseInt(scanner.nextLine()) - 1;
+        for (int i = 0; i < bookIndices.size(); i++) {
+            int bookIndex = bookIndices.get(i) - 1;
 
-                if (bookIndex == -1) {
-                    break;
-                }
-
-                Book selectedBook = books.get(bookIndex);
-
-                System.out.print("How many copies of '" + selectedBook.title + "' would you like to borrow? ");
-                int quantity = Integer.parseInt(scanner.nextLine());
-
-                if (quantity <= 0 || quantity > selectedBook.available || quantity > 10) {
-                    System.out.println("Invalid quantity. Please try again.");
-                    continue;
-                }
-
-                selectedBooks.add(selectedBook);
-                selectedBook.available -= quantity;
-
-            } catch (NumberFormatException | IndexOutOfBoundsException e) {
-                System.out.println("Invalid input. Please try again.");
+            if (bookIndex == -1) {
+                break;
             }
+
+            Book selectedBook = books.get(bookIndex);
+
+            int quantity = quantities.get(i);
+
+            if (quantity <= 0 || quantity > selectedBook.available || quantity > 10) {
+                System.out.println("Invalid quantity. Please try again.");
+                continue;
+            }
+
+            selectedBooks.add(selectedBook);
+            selectedBook.available -= quantity;
         }
 
         // Calculate due dates and late fees
@@ -84,12 +78,11 @@ class Library {
         return totalLateFee;
     }
 
-    public double returnBooks(Scanner scanner) {
+    public double returnBooks(List<String> titles, List<Integer> returnedQuantities) {
         double totalLateFee = 0;
 
-        while (true) {
-            System.out.print("Enter the title of the book to return (or '0' to finish): ");
-            String title = scanner.nextLine();
+        for (int i = 0; i < titles.size(); i++) {
+            String title = titles.get(i);
 
             if (title.equals("0")) {
                 break;
@@ -99,8 +92,7 @@ class Library {
             for (Book book : books) {
                 if (book.title.equals(title)) {
                     found = true;
-                    System.out.print("How many copies of '" + book.title + "' are you returning? ");
-                    int returnedQuantity = Integer.parseInt(scanner.nextLine());
+                    int returnedQuantity = returnedQuantities.get(i);
 
                     if (returnedQuantity <= 0 || returnedQuantity > 10) {
                         System.out.println("Invalid quantity. Please try again.");
@@ -108,7 +100,8 @@ class Library {
                     }
 
                     book.available += returnedQuantity;
-                    double lateFee = Math.max(0, (System.currentTimeMillis() - 14 * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000)) * 1;
+                    long daysLate = (System.currentTimeMillis() - 14 * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000);
+                    double lateFee = Math.max(0, daysLate) * 1;
                     totalLateFee += lateFee;
 
                     System.out.println("\nReturn Summary:");
@@ -130,9 +123,9 @@ class Library {
 
 public class Main {
     public static void main(String[] args) {
-        try (Scanner scanner = new Scanner(System.in)) {
-            Library library = new Library();
+        Library library = new Library();
 
+        try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
                 System.out.println("\nLibrary Book Checkout System");
                 System.out.println("1. Checkout Books");
@@ -145,22 +138,43 @@ public class Main {
 
                     switch (choice) {
                         case "1":
-                            library.checkoutBooks(scanner);
+                            List<Integer> checkoutBookIndices = new ArrayList<>();
+                            List<Integer> checkoutQuantities = new ArrayList<>();
+                            System.out.print("Enter the number of the book to checkout (0 to finish): ");
+                            int bookIndex;
+                            while ((bookIndex = Integer.parseInt(scanner.nextLine())) != 0) {
+                                checkoutBookIndices.add(bookIndex);
+                                System.out.print("How many copies of 'Book" + bookIndex + "' would you like to borrow? ");
+                                int quantity = Integer.parseInt(scanner.nextLine());
+                                checkoutQuantities.add(quantity);
+                            }
+                            library.checkoutBooks(checkoutBookIndices, checkoutQuantities);
                             break;
                         case "2":
-                            library.returnBooks(scanner);
+                            List<String> returnBookTitles = new ArrayList<>();
+                            List<Integer> returnQuantities = new ArrayList<>();
+                            System.out.print("Enter the title of the book to return (or '0' to finish): ");
+                            String title;
+                            while (!(title = scanner.nextLine()).equals("0")) {
+                                returnBookTitles.add(title);
+                                System.out.print("How many copies of '" + title + "' are you returning? ");
+                                int returnedQuantity = Integer.parseInt(scanner.nextLine());
+                                returnQuantities.add(returnedQuantity);
+                            }
+                            library.returnBooks(returnBookTitles, returnQuantities);
                             break;
                         case "3":
                             System.out.println("Exiting the program. Thank you!");
-                            return; // Salir del método main, finalizando el programa
+                            return;
                         default:
                             System.out.println("Invalid choice. Please try again.");
                     }
-                } catch (Exception e) {
-                    System.err.println("Error: " + e.getMessage());
-                    break; // Salir del bucle si se produce otra excepción
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Please try again.");
                 }
             }
         }
     }
 }
+
+
